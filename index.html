@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Store</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;padding:16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+    .card{border:1px solid #ddd;padding:8px;border-radius:8px}
+    .card img{width:100%;height:120px;object-fit:cover}
+  </style>
+</head>
+<body>
+  <h2>My Store</h2>
+  <div id="grid" class="grid"></div>
+
+<script>
+const KEY = 'my_store_products_v1';
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    const products = raw ? JSON.parse(raw) : [];
+    render(products);
+  }catch(e){ render([]); }
+}
+function render(products){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = products.map(p => `
+    <div class="card">
+      ${p.img ? `<img src="${escapeAttr(p.img)}" alt="${escapeAttr(p.name)}">` : ''}
+      <h4>${escapeHtml(p.name)}</h4>
+      <p>Price: ${p.price}</p>
+      <button onclick='addToCart("${p.id}")'>Add to cart</button>
+    </div>
+  `).join('');
+}
+function addToCart(id){ alert('Add to cart: ' + id + ' (demo)'); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+function escapeAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+
+window.addEventListener('storage', load); // live update if open in multiple tabs (same origin)
+load();
+</script>
+</body>
+</html>
+
