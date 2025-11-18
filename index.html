@@ -1,47 +1,41 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Store</title>
-  <style>
-    body{font-family:system-ui,Segoe UI,Arial;padding:16px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
-    .card{border:1px solid #ddd;padding:8px;border-radius:8px}
-    .card img{width:100%;height:120px;object-fit:cover}
-  </style>
+<meta charset="UTF-8">
+<title>Store</title>
+<style>
+  body{font-family: Arial; padding:20px}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:15px}
+  .card{border:1px solid #ccc; padding:10px; border-radius:10px}
+  img{width:100%; height:150px; object-fit:cover}
+</style>
 </head>
 <body>
-  <h2>My Store</h2>
-  <div id="grid" class="grid"></div>
+
+<h2>Products</h2>
+<div class="grid" id="grid"></div>
 
 <script>
-const KEY = 'my_store_products_v1';
-function load(){
-  try{
-    const raw = localStorage.getItem(KEY);
-    const products = raw ? JSON.parse(raw) : [];
-    render(products);
-  }catch(e){ render([]); }
+async function loadProducts(){
+  const url = "https://raw.githubusercontent.com/USER/REPO/main/products.json"; // ← بدّل USER/REPO
+  const res = await fetch(url);
+  const products = await res.json();
+  render(products);
 }
-function render(products){
-  const grid = document.getElementById('grid');
-  grid.innerHTML = products.map(p => `
-    <div class="card">
-      ${p.img ? `<img src="${escapeAttr(p.img)}" alt="${escapeAttr(p.name)}">` : ''}
-      <h4>${escapeHtml(p.name)}</h4>
-      <p>Price: ${p.price}</p>
-      <button onclick='addToCart("${p.id}")'>Add to cart</button>
-    </div>
-  `).join('');
-}
-function addToCart(id){ alert('Add to cart: ' + id + ' (demo)'); }
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
-function escapeAttr(s){ return String(s).replace(/"/g,'&quot;'); }
 
-window.addEventListener('storage', load); // live update if open in multiple tabs (same origin)
-load();
+function render(products){
+  const g = document.getElementById("grid");
+  g.innerHTML = products.map(p => `
+    <div class="card">
+      <img src="${p.img}">
+      <h3>${p.name}</h3>
+      <p>${p.price} DH</p>
+    </div>
+  `).join("");
+}
+
+loadProducts();
 </script>
+
 </body>
 </html>
-
