@@ -17,7 +17,7 @@
 
 <script>
 async function loadProducts(){
-  const url = "https://raw.githubusercontent.com/USER/REPO/main/products.json"; // ← بدّل USER/REPO
+  const url = "https://raw.githubusercontent.com/mrxlahrange/productss/main/products.json" // ← بدّل USER/REPO
   const res = await fetch(url);
   const products = await res.json();
   render(products);
