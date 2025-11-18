@@ -1,172 +1,76 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin - Manage Products</title>
-  <style>
-    body{font-family:system-ui,Segoe UI,Arial;padding:16px}
-    input,button{padding:8px;margin:4px}
-    table{width:100%;border-collapse:collapse;margin-top:12px}
-    th,td{border:1px solid #ddd;padding:8px;text-align:left}
-    .row{display:flex;gap:8px;align-items:center}
-  </style>
+<meta charset="UTF-8">
+<title>Admin Control</title>
+<style>
+  body{font-family: Arial; padding:20px}
+  input{padding:8px; margin:4px; width:250px}
+  button{padding:8px 12px; margin:4px}
+  table{width:100%; border-collapse:collapse; margin-top:20px}
+  td,th{border:1px solid #ccc; padding:8px}
+  img{height:50px}
+</style>
 </head>
 <body>
-  <h2>Admin — Manage Products (no server)</h2>
 
-  <div>
-    <input id="name" placeholder="Product name" />
-    <input id="price" placeholder="Price" type="number" />
-    <input id="img" placeholder="Image URL (or base64)" />
-    <button id="addBtn">Add product</button>
-    <button id="updateBtn" style="display:none">Save edit</button>
-    <button id="cancelEdit" style="display:none">Cancel</button>
-  </div>
+<h2>Admin – Product Manager</h2>
 
-  <div style="margin-top:10px;">
-    <button id="exportBtn">Export JSON</button>
-    <input type="file" id="importFile" accept=".json" />
-  </div>
+<input id="pname" placeholder="Name">
+<input id="pprice" placeholder="Price" type="number">
+<input id="pimg" placeholder="Image URL">
 
-  <table id="productsTable">
-    <thead><tr><th>#</th><th>Name</th><th>Price</th><th>Image</th><th>Actions</th></tr></thead>
-    <tbody></tbody>
-  </table>
+<button onclick="addProduct()">Add</button>
+
+<table id="table">
+<thead>
+<tr><th>Name</th><th>Price</th><th>Image</th><th>Action</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<button onclick="exportJSON()">Export JSON</button>
 
 <script>
-const KEY = 'my_store_products_v1';
 let products = [];
-let editingId = null;
-
-function loadProducts(){
-  try{
-    const raw = localStorage.getItem(KEY);
-    products = raw ? JSON.parse(raw) : [];
-  }catch(e){ products = []; }
-}
-function saveProducts(){
-  localStorage.setItem(KEY, JSON.stringify(products));
-  renderTable();
-}
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 function addProduct(){
-  const name = document.getElementById('name').value.trim();
-  const price = Number(document.getElementById('price').value) || 0;
-  const img = document.getElementById('img').value.trim();
-  if(!name) return alert('Smit product darori');
-  products.unshift({id: uid(), name, price, img});
-  saveProducts();
-  clearForm();
+  const n = document.getElementById("pname").value;
+  const p = document.getElementById("pprice").value;
+  const i = document.getElementById("pimg").value;
+  if(!n) return alert("Name required");
+
+  products.push({id: Date.now(), name:n, price:p, img:i});
+  render();
 }
-function startEdit(id){
-  const p = products.find(x=>x.id===id);
-  if(!p) return;
-  editingId = id;
-  document.getElementById('name').value = p.name;
-  document.getElementById('price').value = p.price;
-  document.getElementById('img').value = p.img;
-  document.getElementById('addBtn').style.display='none';
-  document.getElementById('updateBtn').style.display='inline-block';
-  document.getElementById('cancelEdit').style.display='inline-block';
-}
-function saveEdit(){
-  if(!editingId) return;
-  const name = document.getElementById('name').value.trim();
-  const price = Number(document.getElementById('price').value) || 0;
-  const img = document.getElementById('img').value.trim();
-  const idx = products.findIndex(x=>x.id===editingId);
-  if(idx===-1) return alert('Product mawjoudsh');
-  products[idx] = {...products[idx], name, price, img};
-  editingId = null;
-  saveProducts();
-  clearForm();
-  resetFormButtons();
-}
-function cancelEdit(){
-  editingId = null;
-  clearForm();
-  resetFormButtons();
-}
-function resetFormButtons(){
-  document.getElementById('addBtn').style.display='inline-block';
-  document.getElementById('updateBtn').style.display='none';
-  document.getElementById('cancelEdit').style.display='none';
-}
-function clearForm(){
-  document.getElementById('name').value='';
-  document.getElementById('price').value='';
-  document.getElementById('img').value='';
-}
+
 function deleteProduct(id){
-  if(!confirm('Bghiti tsupprime hada?')) return;
-  products = products.filter(x=>x.id!==id);
-  saveProducts();
+  products = products.filter(x => x.id !== id);
+  render();
 }
-function renderTable(){
-  const tbody = document.querySelector('#productsTable tbody');
-  tbody.innerHTML = '';
-  products.forEach((p,i)=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${i+1}</td>
-      <td>${escapeHtml(p.name)}</td>
+
+function render(){
+  const tbody = document.querySelector("#table tbody");
+  tbody.innerHTML = products.map(p => `
+    <tr>
+      <td>${p.name}</td>
       <td>${p.price}</td>
-      <td>${p.img ? `<img src="${escapeAttr(p.img)}" style="height:40px"/>` : ''}</td>
-      <td>
-        <button data-id="${p.id}" class="edit">Edit</button>
-        <button data-id="${p.id}" class="del">Delete</button>
-      </td>`;
-    tbody.appendChild(tr);
-  });
-  tbody.querySelectorAll('.edit').forEach(b=>{
-    b.onclick = ()=> startEdit(b.dataset.id);
-  });
-  tbody.querySelectorAll('.del').forEach(b=>{
-    b.onclick = ()=> deleteProduct(b.dataset.id);
-  });
+      <td><img src="${p.img}"></td>
+      <td><button onclick="deleteProduct(${p.id})">Delete</button></td>
+    </tr>
+  `).join("");
 }
 
-// Export / Import
 function exportJSON(){
-  const blob = new Blob([JSON.stringify(products, null, 2)], {type:'application/json'});
+  const data = JSON.stringify(products, null, 2);
+  const blob = new Blob([data], {type: "application/json"});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'products.json'; a.click();
-  URL.revokeObjectURL(url);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "products.json";
+  a.click();
 }
-function importJSON(file){
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e=>{
-    try{
-      const data = JSON.parse(e.target.result);
-      if(!Array.isArray(data)) throw new Error('Invalid format');
-      // Option: merge or replace. Here we replace.
-      products = data;
-      saveProducts();
-      alert('Imported successfully');
-    }catch(err){
-      alert('Import failed: ' + err.message);
-    }
-  };
-  reader.readAsText(file);
-}
-
-// small escapes
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
-function escapeAttr(s){ return s.replace(/"/g,'&quot;'); }
-
-// init
-document.getElementById('addBtn').onclick = addProduct;
-document.getElementById('updateBtn').onclick = saveEdit;
-document.getElementById('cancelEdit').onclick = cancelEdit;
-document.getElementById('exportBtn').onclick = exportJSON;
-document.getElementById('importFile').onchange = e=> importJSON(e.target.files[0]);
-
-loadProducts();
-renderTable();
 </script>
+
 </body>
 </html>
